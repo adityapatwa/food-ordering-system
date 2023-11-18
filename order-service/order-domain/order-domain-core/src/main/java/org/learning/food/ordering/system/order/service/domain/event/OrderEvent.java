@@ -3,13 +3,13 @@ package org.learning.food.ordering.system.order.service.domain.event;
 import org.learning.food.ordering.system.domain.event.DomainEvent;
 import org.learning.food.ordering.system.order.service.domain.entity.Order;
 
-import java.time.ZonedDateTime;
+import java.time.OffsetDateTime;
 
 public abstract class OrderEvent implements DomainEvent<Order> {
     private final Order order;
-    private final ZonedDateTime createdAt;
+    private final OffsetDateTime createdAt;
 
-    public OrderEvent(Order order, ZonedDateTime createdAt) {
+    public OrderEvent(Order order, OffsetDateTime createdAt) {
         this.order = order;
         this.createdAt = createdAt;
     }
@@ -18,7 +18,7 @@ public abstract class OrderEvent implements DomainEvent<Order> {
         return order;
     }
 
-    public ZonedDateTime getCreatedAt() {
+    public OffsetDateTime getCreatedAt() {
         return createdAt;
     }
 }
