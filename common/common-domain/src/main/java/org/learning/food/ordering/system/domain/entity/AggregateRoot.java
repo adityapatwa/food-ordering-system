@@ -1,2 +1,5 @@
-package org.learning.food.ordering.system.domain.entity;public class AggregrateRoot {
+package org.learning.food.ordering.system.domain.entity;
+
+public abstract class AggregateRoot<ID> extends BaseEntity<ID> {
+
 }
