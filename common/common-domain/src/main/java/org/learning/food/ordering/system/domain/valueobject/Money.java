@@ -4,36 +4,26 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Objects;
 
-import static java.math.BigDecimal.ZERO;
-
-public class Money {
-    private final BigDecimal amount;
-
-    public Money(BigDecimal amount) {
-        this.amount = amount;
-    }
-
-    public BigDecimal getAmount() {
-        return amount;
-    }
+public record Money(BigDecimal amount) {
+    public static final Money ZERO = new Money(BigDecimal.ZERO);
 
     public boolean isGreaterThanZero() {
-        return Objects.nonNull(this.amount) && this.amount.compareTo(ZERO) > 0;
+        return Objects.nonNull(this.amount) && this.amount.compareTo(BigDecimal.ZERO) > 0;
     }
 
     public boolean isGreaterThan(Money money) {
-        return Objects.nonNull(this.amount) && this.amount.compareTo(money.getAmount()) > 0;
+        return Objects.nonNull(this.amount) && this.amount.compareTo(money.amount()) > 0;
     }
 
     public Money add(Money money) {
-        return new Money(setScale(this.amount.add(money.getAmount())));
+        return new Money(setScale(this.amount.add(money.amount())));
     }
 
     public Money subtract(Money money) {
-        return new Money(setScale(this.amount.subtract(money.getAmount())));
+        return new Money(setScale(this.amount.subtract(money.amount())));
     }
 
-    public Money subtract(int multiplier) {
+    public Money multiply(int multiplier) {
         return new Money(setScale(this.amount.multiply(new BigDecimal(multiplier))));
     }
 
