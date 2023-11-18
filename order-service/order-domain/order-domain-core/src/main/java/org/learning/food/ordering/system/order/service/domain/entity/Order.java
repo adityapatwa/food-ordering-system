@@ -12,8 +12,15 @@ import java.util.Objects;
 
 import static java.util.UUID.randomUUID;
 import static org.learning.food.ordering.system.domain.valueobject.Money.ZERO;
+import static org.learning.food.ordering.system.domain.valueobject.OrderStatus.*;
 
 public class Order extends AggregateRoot<OrderId> {
+    public static final String PAY_OPERATION_EXCEPTION_MESSAGE = "Order is not in the correct state for pay operation!";
+    public static final String APPROVE_OPERATION_EXCEPTION_MESSAGE = "Order is not in the correct state for approve operation!";
+    public static final String INIT_CANCEL_OPERATION_EXCEPTION_MESSAGE = "Order is not in the correct state for initCancel operation!";
+    public static final String CANCEL_OPERATION_EXCEPTION_MESSAGE = "Order is not in the correct state for cancel operation!";
+    public static final String ORDER_INITIALIZATION_EXCEPTION_MESSAGE = "Order is not in correct state for initialization!";
+    public static final String INVALID_ORDER_PRICE_EXCEPTION_MESSAGE = "Total price must be greater than zero!";
     private final CustomerId customerId;
     private final RestaurantId restaurantId;
     private final StreetAddress streetAddress;
@@ -42,15 +49,57 @@ public class Order extends AggregateRoot<OrderId> {
         validateItemsPrice();
     }
 
+    public void pay() {
+        if (!orderStatus.equals(PENDING)) {
+            throw new OrderDomainException(PAY_OPERATION_EXCEPTION_MESSAGE);
+        }
+        orderStatus = PAID;
+    }
+
+    public void approve() {
+        if (!orderStatus.equals(PAID)) {
+            throw new OrderDomainException(APPROVE_OPERATION_EXCEPTION_MESSAGE);
+        }
+        orderStatus = APPROVED;
+    }
+
+    public void initCancel(List<String> failureMessages) {
+        if (!orderStatus.equals(PAID)) {
+            throw new OrderDomainException(INIT_CANCEL_OPERATION_EXCEPTION_MESSAGE);
+        }
+        orderStatus = CANCELLING;
+        updateFailureMessages(failureMessages);
+    }
+
+    public void cancel(List<String> failureMessages) {
+        if (!(orderStatus.equals(PENDING) || orderStatus.equals(CANCELLING))) {
+            throw new OrderDomainException(CANCEL_OPERATION_EXCEPTION_MESSAGE);
+        }
+        orderStatus = CANCELLED;
+        updateFailureMessages(failureMessages);
+    }
+
+    private void updateFailureMessages(List<String> failureMessages) {
+        assert !Objects.isNull(failureMessages);
+
+        if (!Objects.isNull(this.failureMessages)) {
+            this.failureMessages.addAll(failureMessages.stream().filter(message -> !message.isBlank()).toList());
+        }
+
+        if (Objects.isNull(this.failureMessages)) {
+            this.failureMessages = failureMessages.stream().filter(message -> !message.isBlank()).toList();
+        }
+    }
+
     private void validateInitialOrder() {
         if (!(Objects.isNull(orderStatus) || Objects.isNull(getId()))) {
-            throw new OrderDomainException("Order is not in correct state for initialization!");
+            throw new OrderDomainException(ORDER_INITIALIZATION_EXCEPTION_MESSAGE);
         }
     }
 
     private void validateTotalPrice() {
         if (Objects.isNull(price) || !price.isGreaterThanZero()) {
-            throw new OrderDomainException("Total price must be greater than zero!");
+            throw new OrderDomainException(INVALID_ORDER_PRICE_EXCEPTION_MESSAGE);
         }
     }
 
@@ -76,7 +125,7 @@ public class Order extends AggregateRoot<OrderId> {
     public void initializeOrder() {
         setId(new OrderId(randomUUID()));
         trackingId = new TrackingId(randomUUID());
-        orderStatus = OrderStatus.PENDING;
+        orderStatus = PENDING;
         initializeOrderItems();
     }
 
